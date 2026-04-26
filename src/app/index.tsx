@@ -29,9 +29,10 @@ export default function HomeScreen() {
     const results = await Promise.all(
       vehicles.map(async vehicle => {
         const parts = await getPartsByVehicle(db, vehicle.id);
-        const flaggedParts = parts.filter(
-          p => getPartStatus(p, vehicle.current_km) !== 'ok'
-        );
+        const flaggedParts = parts.filter(p => {
+          const status = getPartStatus(p, vehicle.current_km);
+          return status === 'due-soon' || status === 'overdue';
+        });
         return { vehicle, flaggedParts };
       })
     );
