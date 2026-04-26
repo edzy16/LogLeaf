@@ -9,6 +9,7 @@ const STATUS_COLORS: Record<PartStatus, string> = {
   ok: Colors.dark.success,
   'due-soon': Colors.dark.warning,
   overdue: Colors.dark.danger,
+  tracked: Colors.dark.textSecondary,
 };
 
 interface PartStatusRowProps {
@@ -19,13 +20,18 @@ interface PartStatusRowProps {
 
 export function PartStatusRow({ part, currentKm, onPress }: PartStatusRowProps) {
   const status = getPartStatus(part, currentKm);
-  const kmRemaining = getKmRemaining(part, currentKm);
   const color = STATUS_COLORS[status];
 
-  const label =
-    status === 'overdue'
-      ? `${Math.abs(Math.round(kmRemaining))} km overdue`
-      : `${Math.round(kmRemaining)} km remaining`;
+  let label: string;
+  if (status === 'tracked') {
+    label = `Last replaced at ${Math.round(part.replaced_at_km)} km`;
+  } else {
+    const kmRemaining = getKmRemaining(part, currentKm) ?? 0;
+    label =
+      status === 'overdue'
+        ? `${Math.abs(Math.round(kmRemaining))} km overdue`
+        : `${Math.round(kmRemaining)} km remaining`;
+  }
 
   return (
     <Pressable
