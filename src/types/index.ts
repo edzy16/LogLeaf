@@ -9,7 +9,7 @@ export interface Part {
   vehicle_id: number;
   name: string;
   replaced_at_km: number;
-  interval_km: number;
+  interval_km: number | null;
 }
 
 export interface FuelLog {
@@ -21,4 +21,4 @@ export interface FuelLog {
   logged_at: number;
 }
 
-export type PartStatus = 'ok' | 'due-soon' | 'overdue';
+export type PartStatus = 'ok' | 'due-soon' | 'overdue' | 'tracked';
