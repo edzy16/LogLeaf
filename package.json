@@ -8,7 +8,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "jest-expo"
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.15.5",
@@ -35,10 +39,13 @@
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",
-    "react-native-web": "~0.21.0"
+    "react-native-web": "~0.21.0",
+    "expo-sqlite": "~55.0.15"
   },
   "devDependencies": {
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
+    "jest-expo": "~55.0.16",
     "typescript": "~5.9.2"
   },
   "private": true

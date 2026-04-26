@@ -1,16 +1,29 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import React from 'react';
-import { useColorScheme } from 'react-native';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { SQLiteProvider } from 'expo-sqlite';
 
+import { migrateDb } from '@/db/migrations';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
+import { FAB } from '@/components/fab';
+import { AddSheet } from '@/components/add-sheet';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const [addOpen, setAddOpen] = useState(false);
+  const [, setRefreshKey] = useState(0);
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <SQLiteProvider databaseName="logleaf.db" onInit={migrateDb}>
+      <ThemeProvider value={DarkTheme}>
+        <AnimatedSplashOverlay />
+        <AppTabs />
+        <FAB onPress={() => setAddOpen(true)} />
+        <AddSheet
+          visible={addOpen}
+          onClose={() => setAddOpen(false)}
+          onSaved={() => setRefreshKey(k => k + 1)}
+        />
+      </ThemeProvider>
+    </SQLiteProvider>
   );
 }
