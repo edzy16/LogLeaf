@@ -34,7 +34,9 @@ export function AddPartModal({
     if (existing) {
       setName(existing.name);
       setReplacedAtStr(String(existing.replaced_at_km));
-      setIntervalStr(String(existing.interval_km));
+      setIntervalStr(
+        existing.interval_km == null ? "" : String(existing.interval_km)
+      );
     } else {
       setName("");
       setReplacedAtStr(String(currentKm));
@@ -43,12 +45,20 @@ export function AddPartModal({
   }, [existing, visible, currentKm]);
 
   const isEdit = !!existing;
-  const isValid = name.trim() && parseFloat(intervalStr) > 0;
+  const isValid = !!name.trim();
+
+  function parseInterval(): number | null {
+    const trimmed = intervalStr.trim();
+    if (!trimmed) return null;
+    const parsed = parseFloat(trimmed);
+    if (!Number.isFinite(parsed) || parsed <= 0) return null;
+    return parsed;
+  }
 
   async function handleSave() {
     if (!isValid) return;
     const replacedAt = parseFloat(replacedAtStr) || 0;
-    const interval = parseFloat(intervalStr);
+    const interval = parseInterval();
 
     try {
       if (isEdit) {
@@ -112,6 +122,9 @@ export function AddPartModal({
           placeholderTextColor={Colors.dark.textSecondary}
           keyboardType="numeric"
         />
+        <ThemedText type="small" themeColor="textSecondary">
+          Leave blank if you just want to track replacements.
+        </ThemedText>
       </View>
 
       <TouchableOpacity
