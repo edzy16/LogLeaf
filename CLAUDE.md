@@ -40,7 +40,7 @@ npx tsc --noEmit
 - `vehicles.ts`, `parts.ts`, `fuelLogs.ts` — plain async functions taking `db: SQLiteDatabase` as first arg. Repositories, not classes. Used in screens via `useSQLiteContext()`.
 
 ### Pure logic (`src/utils/`)
-- `partStatus.ts` — `getPartStatus(part, currentKm)` returns `'ok' | 'due-soon' | 'overdue'`. Due-soon threshold is fixed at 500 km.
+- `partStatus.ts` — `getPartStatus(part, currentKm)` returns `'ok' | 'due-soon' | 'overdue' | 'tracked'`. Due-soon threshold is fixed at 500 km. `'tracked'` is returned when `interval_km` is null (the user is logging replacements without a defined interval).
 - `mileage.ts` — `calcMileage(logs)` returns `{ lifetimeAvg, last5Avg, status }`. Two modes: **precise** (when ≥2 full-tank entries exist, math is exact between them) and **estimated** (fallback, treats first entry as anchor with fuel ignored). Status enum: `'no-logs' | 'need-more' | 'estimated' | 'precise'`.
 
 Both are unit-tested in `__tests__/`. Pure data → data; no React, no I/O.
