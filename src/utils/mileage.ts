@@ -6,6 +6,10 @@ export interface MileageResult {
   status: 'no-logs' | 'need-more' | 'estimated' | 'precise';
 }
 
+// Last 6 entries = 5 trips. 6 anchors yield 5 inter-anchor intervals in precise mode;
+// in estimated mode the first of 6 is the odometer anchor and the next 5 contribute fuel.
+const TRIPS_WINDOW_SIZE = 6;
+
 export function calcMileage(logs: FuelLog[]): MileageResult {
   const sorted = [...logs].sort((a, b) => a.odometer_km - b.odometer_km);
 
@@ -23,12 +27,12 @@ export function calcMileage(logs: FuelLog[]): MileageResult {
 
   if (fullTankIndices.length >= 2) {
     const lifetimeAvg = calcPreciseAvg(sorted, fullTankIndices);
-    const last5Avg = calcPreciseAvg(sorted, fullTankIndices.slice(-6));
+    const last5Avg = calcPreciseAvg(sorted, fullTankIndices.slice(-TRIPS_WINDOW_SIZE));
     return { lifetimeAvg, last5Avg, status: 'precise' };
   }
 
   const lifetimeAvg = calcEstimatedAvg(sorted);
-  const last5Avg = calcEstimatedAvg(sorted.slice(-6));
+  const last5Avg = calcEstimatedAvg(sorted.slice(-TRIPS_WINDOW_SIZE));
   return { lifetimeAvg, last5Avg, status: 'estimated' };
 }
 
