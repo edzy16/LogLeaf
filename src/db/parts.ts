@@ -16,7 +16,7 @@ export async function addPart(
   vehicleId: number,
   name: string,
   replacedAtKm: number,
-  intervalKm: number
+  intervalKm: number | null
 ): Promise<number> {
   const result = await db.runAsync(
     'INSERT INTO parts (vehicle_id, name, replaced_at_km, interval_km) VALUES (?, ?, ?, ?)',
@@ -32,7 +32,7 @@ export async function updatePart(
   db: SQLiteDatabase,
   id: number,
   name: string,
-  intervalKm: number
+  intervalKm: number | null
 ): Promise<void> {
   await db.runAsync(
     'UPDATE parts SET name = ?, interval_km = ? WHERE id = ?',
