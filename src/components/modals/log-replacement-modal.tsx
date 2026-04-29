@@ -46,8 +46,7 @@ export function LogReplacementModal({
   if (!part) return null;
 
   const km = Number(kmStr);
-  const isValid = Number.isFinite(km) && km >= 0;
-
+  const isValid = kmStr.trim() !== "" && Number.isFinite(km) && km >= 0;
   async function commit(rawKm: number) {
     if (!part) return;
     const replacedAtKm = Math.round(rawKm);
@@ -66,10 +65,14 @@ export function LogReplacementModal({
 
   async function handleSave() {
     if (!isValid) return;
-    if (km - currentKm > SUSPICIOUS_BUMP_KM) {
+    const delta = km - currentKm;
+    if (Math.abs(delta) > SUSPICIOUS_BUMP_KM) {
+      const isJump = delta > 0;
+      const title = isJump ? "Odometer jump" : "Odometer drop";
+      const direction = isJump ? "well above" : "well below";
       Alert.alert(
-        "Odometer jump",
-        `${km.toLocaleString()} km is well above the current ${currentKm.toLocaleString()} km. Save anyway?`,
+        title,
+        `${km.toLocaleString()} km is ${direction} the current ${currentKm.toLocaleString()} km. Save anyway?`,
         [
           { text: "Cancel", style: "cancel" },
           { text: "Save", onPress: () => commit(km) },

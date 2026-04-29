@@ -115,7 +115,13 @@ export default function VehicleDetailScreen() {
   async function handleOdometerSave() {
     if (!vehicle) return;
     const raw = Number(odometerInput);
-    if (!Number.isFinite(raw) || raw < 0) return;
+    if (!Number.isFinite(raw) || raw < 0) {
+      Alert.alert(
+        "Invalid Odometer",
+        "Please enter a valid non‑negative number for odometer.",
+      );
+      return;
+    }
     const km = Math.round(raw);
     if (km < vehicle.current_km) {
       Alert.alert(
