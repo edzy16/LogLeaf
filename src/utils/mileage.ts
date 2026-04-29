@@ -36,7 +36,10 @@ export function calcMileage(logs: FuelLog[]): MileageResult {
   return { lifetimeAvg, last5Avg, status: 'estimated' };
 }
 
-function calcPreciseAvg(sorted: FuelLog[], anchorIndices: number[]): number {
+function calcPreciseAvg(
+  sorted: FuelLog[],
+  anchorIndices: number[]
+): number | null {
   const firstIdx = anchorIndices[0];
   const lastIdx = anchorIndices[anchorIndices.length - 1];
   const kmDriven = sorted[lastIdx].odometer_km - sorted[firstIdx].odometer_km;
@@ -44,13 +47,13 @@ function calcPreciseAvg(sorted: FuelLog[], anchorIndices: number[]): number {
   for (let i = firstIdx + 1; i <= lastIdx; i++) {
     totalFuel += sorted[i].fuel_litres;
   }
-  if (totalFuel === 0) return 0;
+  if (totalFuel <= 0 || kmDriven <= 0) return null;
   return kmDriven / totalFuel;
 }
 
-function calcEstimatedAvg(logs: FuelLog[]): number {
+function calcEstimatedAvg(logs: FuelLog[]): number | null {
   const kmDriven = logs[logs.length - 1].odometer_km - logs[0].odometer_km;
   const totalFuel = logs.slice(1).reduce((sum, l) => sum + l.fuel_litres, 0);
-  if (totalFuel === 0) return 0;
+  if (totalFuel <= 0 || kmDriven <= 0) return null;
   return kmDriven / totalFuel;
 }

@@ -12,6 +12,17 @@ export async function getFuelLogsByVehicle(
   );
 }
 
+export async function getMaxFuelLogOdometer(
+  db: SQLiteDatabase,
+  vehicleId: number,
+): Promise<number | null> {
+  const row = await db.getFirstAsync<{ max_km: number | null }>(
+    "SELECT MAX(odometer_km) AS max_km FROM fuel_logs WHERE vehicle_id = ?",
+    vehicleId,
+  );
+  return row?.max_km ?? null;
+}
+
 export async function addFuelLog(
   db: SQLiteDatabase,
   vehicleId: number,

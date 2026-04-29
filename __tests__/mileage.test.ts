@@ -142,4 +142,43 @@ describe('calcMileage', () => {
     expect(result.status).toBe('precise');
     expect(result.lifetimeAvg).toBeCloseTo(60);
   });
+
+  describe('degenerate / corrupt input', () => {
+    it('returns null avgs in precise mode when two full-tank anchors share an odometer', () => {
+      const logs = [makeLog(1, 10000, 5, 1), makeLog(2, 10000, 5, 1)];
+      const result = calcMileage(logs);
+      expect(result.status).toBe('precise');
+      expect(result.lifetimeAvg).toBeNull();
+      expect(result.last5Avg).toBeNull();
+    });
+
+    it('returns null avgs in estimated mode when both entries share an odometer', () => {
+      const logs = [makeLog(1, 10000, 0, 0), makeLog(2, 10000, 5, 0)];
+      const result = calcMileage(logs);
+      expect(result.status).toBe('estimated');
+      expect(result.lifetimeAvg).toBeNull();
+      expect(result.last5Avg).toBeNull();
+    });
+
+    it('returns null avgs in precise mode when no fuel was logged between anchors', () => {
+      const logs = [makeLog(1, 10000, 0, 1), makeLog(2, 10300, 0, 1)];
+      const result = calcMileage(logs);
+      expect(result.status).toBe('precise');
+      expect(result.lifetimeAvg).toBeNull();
+    });
+
+    it('handles unordered logs even when out-of-order entries appear adjacent', () => {
+      // Fed in scrambled order; calcMileage should sort first and compute correctly.
+      const logs = [
+        makeLog(3, 10500, 5, 1),
+        makeLog(1, 10000, 5, 1),
+        makeLog(2, 10250, 4, 0),
+      ];
+      const result = calcMileage(logs);
+      expect(result.status).toBe('precise');
+      // Sorted: 10000(full), 10250(partial 4L), 10500(full 5L)
+      // kmDriven=500, totalFuel after first anchor = 4+5 = 9
+      expect(result.lifetimeAvg).toBeCloseTo(500 / 9);
+    });
+  });
 });

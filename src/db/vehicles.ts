@@ -38,6 +38,10 @@ export async function updateVehicle(
   await db.runAsync('UPDATE vehicles SET name = ? WHERE id = ?', name, id);
 }
 
+/**
+ * Manual odometer edit: sets current_km exactly.
+ * Callers that just want to bump on a fresh log/replacement should use bumpOdometer.
+ */
 export async function updateOdometer(
   db: SQLiteDatabase,
   id: number,
@@ -45,6 +49,22 @@ export async function updateOdometer(
 ): Promise<void> {
   await db.runAsync(
     'UPDATE vehicles SET current_km = ? WHERE id = ?',
+    km,
+    id
+  );
+}
+
+/**
+ * Raise current_km to `km` only if higher. Safe against stale prop values
+ * in modals — won't regress a vehicle's odometer.
+ */
+export async function bumpOdometer(
+  db: SQLiteDatabase,
+  id: number,
+  km: number
+): Promise<void> {
+  await db.runAsync(
+    'UPDATE vehicles SET current_km = MAX(current_km, ?) WHERE id = ?',
     km,
     id
   );

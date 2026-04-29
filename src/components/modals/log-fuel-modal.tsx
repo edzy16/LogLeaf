@@ -1,10 +1,11 @@
 import { ModalSheet } from "@/components/modal-sheet";
 import { ThemedText } from "@/components/themed-text";
 import { Colors, Spacing } from "@/constants/theme";
-import { addFuelLog } from "@/db/fuelLogs";
+import { addFuelLog, getMaxFuelLogOdometer } from "@/db/fuelLogs";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Switch,
   TextInput,
@@ -32,28 +33,44 @@ export function LogFuelModal({
   const [litresStr, setLitresStr] = useState("");
   const [isFullTank, setIsFullTank] = useState(true);
 
+  // Snapshot currentKm at open time so a parent refetch mid-edit doesn't wipe user input.
   useEffect(() => {
     if (visible) {
       setOdometerStr(String(currentKm));
       setLitresStr("");
       setIsFullTank(true);
     }
-  }, [visible, currentKm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
-  const odometer = parseFloat(odometerStr);
-  const litres = parseFloat(litresStr);
+  const odometer = Number(odometerStr);
+  const litres = Number(litresStr);
   const isValid =
-    !isNaN(odometer) && odometer >= 0 && !isNaN(litres) && litres > 0;
+    Number.isFinite(odometer) &&
+    odometer >= 0 &&
+    Number.isFinite(litres) &&
+    litres > 0;
 
   async function handleSave() {
     if (!isValid) return;
+    const odometerKm = Math.round(odometer);
+    const previousMax = await getMaxFuelLogOdometer(db, vehicleId);
+    if (previousMax !== null && odometerKm < previousMax) {
+      Alert.alert(
+        "Odometer too low",
+        `Last logged fill-up was at ${previousMax.toLocaleString()} km. The odometer can't go down between fill-ups.`,
+      );
+      return;
+    }
     try {
-      await addFuelLog(db, vehicleId, odometer, litres, isFullTank);
+      await addFuelLog(db, vehicleId, odometerKm, litres, isFullTank);
       onSaved();
       onClose();
     } catch (error) {
-      console.error("Failed to log fuel:", error);
-      // User can retry without modal closing
+      Alert.alert(
+        "Save failed",
+        error instanceof Error ? error.message : "Could not log fill-up.",
+      );
     }
   }
 

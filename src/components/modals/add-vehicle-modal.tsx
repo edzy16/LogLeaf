@@ -5,7 +5,13 @@ import { addVehicle, updateVehicle } from "@/db/vehicles";
 import { Vehicle } from "@/types";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface AddVehicleModalProps {
   visible: boolean;
@@ -27,7 +33,9 @@ export function AddVehicleModal({
     existing ? String(existing.current_km) : "",
   );
 
+  // Snapshot props at open time so a parent refetch doesn't clobber user edits.
   useEffect(() => {
+    if (!visible) return;
     if (existing) {
       setName(existing.name);
       setKmStr(String(existing.current_km));
@@ -35,24 +43,35 @@ export function AddVehicleModal({
       setName("");
       setKmStr("");
     }
-  }, [existing, visible]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, existing?.id]);
 
   const isEdit = !!existing;
+  const trimmedName = name.trim();
+  const kmRaw = Number(kmStr);
+  const kmValid = isEdit || (kmStr.trim() === "" || (Number.isFinite(kmRaw) && kmRaw >= 0));
+  const isValid = !!trimmedName && kmValid;
 
   async function handleSave() {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const km = parseFloat(kmStr) || 0;
+    if (!isValid) return;
+    const km = kmStr.trim() === "" ? 0 : Math.round(kmRaw);
 
-    if (isEdit) {
-      await updateVehicle(db, existing.id, trimmed);
-    } else {
-      await addVehicle(db, trimmed, km);
+    try {
+      if (isEdit) {
+        await updateVehicle(db, existing.id, trimmedName);
+      } else {
+        await addVehicle(db, trimmedName, km);
+      }
+      onSaved();
+      onClose();
+      setName("");
+      setKmStr("");
+    } catch (error) {
+      Alert.alert(
+        "Save failed",
+        error instanceof Error ? error.message : "Could not save vehicle.",
+      );
     }
-    onSaved();
-    onClose();
-    setName("");
-    setKmStr("");
   }
 
   return (
@@ -92,9 +111,9 @@ export function AddVehicleModal({
       )}
 
       <TouchableOpacity
-        style={[styles.button, !name.trim() && styles.buttonDisabled]}
+        style={[styles.button, !isValid && styles.buttonDisabled]}
         onPress={handleSave}
-        disabled={!name.trim()}
+        disabled={!isValid}
       >
         <ThemedText type="default" style={styles.buttonText}>
           {isEdit ? "Save Changes" : "Add Vehicle"}

@@ -2,11 +2,20 @@ import { ModalSheet } from "@/components/modal-sheet";
 import { ThemedText } from "@/components/themed-text";
 import { Colors, Spacing } from "@/constants/theme";
 import { logReplacement } from "@/db/parts";
-import { updateOdometer } from "@/db/vehicles";
+import { bumpOdometer } from "@/db/vehicles";
 import { Part } from "@/types";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+// Anything more than this km above the current odometer triggers a confirmation.
+const SUSPICIOUS_BUMP_KM = 1000;
 
 interface LogReplacementModalProps {
   visible: boolean;
@@ -28,28 +37,47 @@ export function LogReplacementModal({
   const db = useSQLiteContext();
   const [kmStr, setKmStr] = useState("");
 
+  // Snapshot currentKm at open time so parent refetches don't wipe user input.
   useEffect(() => {
     if (visible) setKmStr(String(currentKm));
-  }, [visible, currentKm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   if (!part) return null;
 
-  const km = parseFloat(kmStr);
-  const isValid = !isNaN(km) && km >= 0;
+  const km = Number(kmStr);
+  const isValid = Number.isFinite(km) && km >= 0;
 
-  async function handleSave() {
-    if (!isValid || !part) return;
+  async function commit(rawKm: number) {
+    if (!part) return;
+    const replacedAtKm = Math.round(rawKm);
     try {
-      await logReplacement(db, part.id, km);
-      if (km > currentKm) {
-        await updateOdometer(db, vehicleId, km);
-      }
+      await logReplacement(db, part.id, replacedAtKm);
+      await bumpOdometer(db, vehicleId, replacedAtKm);
       onSaved();
       onClose();
     } catch (error) {
-      console.error("Failed to log replacement:", error);
-      // User can retry without modal closing
+      Alert.alert(
+        "Save failed",
+        error instanceof Error ? error.message : "Could not log replacement.",
+      );
     }
+  }
+
+  async function handleSave() {
+    if (!isValid) return;
+    if (km - currentKm > SUSPICIOUS_BUMP_KM) {
+      Alert.alert(
+        "Odometer jump",
+        `${km.toLocaleString()} km is well above the current ${currentKm.toLocaleString()} km. Save anyway?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Save", onPress: () => commit(km) },
+        ],
+      );
+      return;
+    }
+    await commit(km);
   }
 
   return (

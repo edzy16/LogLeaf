@@ -46,9 +46,11 @@ export default function VehicleDetailScreen() {
   const [replacePart, setReplacePart] = useState<Part | null>(null);
   const [logFuelOpen, setLogFuelOpen] = useState(false);
 
+  const [notFound, setNotFound] = useState(false);
+
   const loadData = useCallback(async () => {
     if (isNaN(vehicleId)) {
-      router.back();
+      setNotFound(true);
       return;
     }
 
@@ -59,15 +61,16 @@ export default function VehicleDetailScreen() {
       getMileageForVehicle(db, vehicleId),
     ]);
     if (!v) {
-      router.back();
+      setNotFound(true);
       return;
     }
+    setNotFound(false);
     setVehicle(v);
     setParts(p);
     setFuelLogs(f);
     setMileage(m);
     setOdometerInput(String(v.current_km));
-  }, [db, vehicleId, router]);
+  }, [db, vehicleId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -75,15 +78,61 @@ export default function VehicleDetailScreen() {
     }, [loadData]),
   );
 
-  if (isNaN(vehicleId)) return null;
+  if (notFound) {
+    return (
+      <View style={styles.screen}>
+        <SafeAreaView edges={["top"]} style={styles.notFound}>
+          <ThemedText type="subtitle">Vehicle not found</ThemedText>
+          <ThemedText themeColor="textSecondary">
+            This vehicle no longer exists.
+          </ThemedText>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <ThemedText themeColor="primary">← Back</ThemedText>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </View>
+    );
+  }
   if (!vehicle) return null;
 
+  async function commitOdometer(km: number) {
+    if (!vehicle) return;
+    try {
+      await updateOdometer(db, vehicle.id, km);
+      setEditingOdometer(false);
+      loadData();
+    } catch (error) {
+      Alert.alert(
+        "Save failed",
+        error instanceof Error ? error.message : "Could not update odometer.",
+      );
+    }
+  }
+
   async function handleOdometerSave() {
-    const km = parseFloat(odometerInput);
-    if (isNaN(km) || km < 0 || !vehicle) return;
-    await updateOdometer(db, vehicle.id, km);
-    setEditingOdometer(false);
-    loadData();
+    if (!vehicle) return;
+    const raw = Number(odometerInput);
+    if (!Number.isFinite(raw) || raw < 0) return;
+    const km = Math.round(raw);
+    if (km < vehicle.current_km) {
+      Alert.alert(
+        "Lower the odometer?",
+        `New value (${km.toLocaleString()} km) is below the current ${vehicle.current_km.toLocaleString()} km. Mileage history may become inconsistent.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Lower it",
+            style: "destructive",
+            onPress: () => commitOdometer(km),
+          },
+        ],
+      );
+      return;
+    }
+    await commitOdometer(km);
   }
 
   function handlePartLongPress(part: Part) {
@@ -289,7 +338,7 @@ export default function VehicleDetailScreen() {
                   Lifetime avg
                 </ThemedText>
                 <ThemedText type="subtitle">
-                  {mileage?.lifetimeAvg?.toFixed(1)}
+                  {mileage?.lifetimeAvg?.toFixed(1) ?? "—"}
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   km/L
@@ -300,7 +349,7 @@ export default function VehicleDetailScreen() {
                   Last 5 fills
                 </ThemedText>
                 <ThemedText type="subtitle">
-                  {mileage?.last5Avg?.toFixed(1)}
+                  {mileage?.last5Avg?.toFixed(1) ?? "—"}
                 </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   km/L
@@ -368,6 +417,11 @@ const styles = StyleSheet.create({
   backButton: {
     paddingTop: Spacing.four,
     paddingBottom: Spacing.two,
+  },
+  notFound: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.six,
+    gap: Spacing.two,
   },
   vehicleName: {
     marginBottom: Spacing.two,

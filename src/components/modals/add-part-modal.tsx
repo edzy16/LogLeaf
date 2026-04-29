@@ -5,7 +5,13 @@ import { addPart, updatePart } from "@/db/parts";
 import { Part } from "@/types";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useEffect, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface AddPartModalProps {
   visible: boolean;
@@ -30,35 +36,44 @@ export function AddPartModal({
   const [replacedAtStr, setReplacedAtStr] = useState("");
   const [intervalStr, setIntervalStr] = useState("");
 
+  // Snapshot props at open time so a parent refetch doesn't clobber user edits.
   useEffect(() => {
+    if (!visible) return;
     if (existing) {
       setName(existing.name);
       setReplacedAtStr(String(existing.replaced_at_km));
       setIntervalStr(
-        existing.interval_km == null ? "" : String(existing.interval_km)
+        existing.interval_km == null ? "" : String(existing.interval_km),
       );
     } else {
       setName("");
       setReplacedAtStr(String(currentKm));
       setIntervalStr("");
     }
-  }, [existing, visible, currentKm]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, existing?.id]);
 
   const isEdit = !!existing;
-  const isValid = !!name.trim();
+  const replacedAtRaw = Number(replacedAtStr);
+  const replacedAtValid =
+    isEdit ||
+    (replacedAtStr.trim() !== "" &&
+      Number.isFinite(replacedAtRaw) &&
+      replacedAtRaw >= 0);
+  const isValid = !!name.trim() && replacedAtValid;
 
   function parseInterval(): number | null {
     const trimmed = intervalStr.trim();
     if (!trimmed) return null;
-    const parsed = parseFloat(trimmed);
+    const parsed = Number(trimmed);
     if (!Number.isFinite(parsed) || parsed <= 0) return null;
-    return parsed;
+    return Math.round(parsed);
   }
 
   async function handleSave() {
     if (!isValid) return;
-    const replacedAt = parseFloat(replacedAtStr) || 0;
     const interval = parseInterval();
+    const replacedAt = isEdit ? 0 : Math.round(replacedAtRaw);
 
     try {
       if (isEdit) {
@@ -70,8 +85,10 @@ export function AddPartModal({
       onSaved();
       onClose();
     } catch (error) {
-      console.error("Failed to save part:", error);
-      // User can retry without modal closing
+      Alert.alert(
+        "Save failed",
+        error instanceof Error ? error.message : "Could not save part.",
+      );
     }
   }
 
