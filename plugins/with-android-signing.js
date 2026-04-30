@@ -8,9 +8,9 @@ const { withAppBuildGradle } = require('@expo/config-plugins');
 // fail loudly with a KeystoreException.
 const RELEASE_SIGNING_BLOCK = `        release {
             storeFile file('release.keystore')
-            storePassword (System.getenv('ANDROID_KEYSTORE_PASSWORD') ?: '').trim()
-            keyAlias (System.getenv('ANDROID_KEY_ALIAS') ?: '').trim()
-            keyPassword (System.getenv('ANDROID_KEY_PASSWORD') ?: '').trim()
+            storePassword = (System.getenv('ANDROID_KEYSTORE_PASSWORD') ?: '').trim()
+            keyAlias = (System.getenv('ANDROID_KEY_ALIAS') ?: '').trim()
+            keyPassword = (System.getenv('ANDROID_KEY_PASSWORD') ?: '').trim()
         }
 `;
 
