@@ -1,7 +1,8 @@
-import { BottomTabInset, Colors, Spacing } from "@/constants/theme";
 import React from "react";
 import { Platform, Pressable, StyleSheet } from "react-native";
-import { ThemedText } from "./themed-text";
+import { MaterialIcons } from "@expo/vector-icons";
+
+import { BottomTabInset, Colors, Spacing } from "@/constants/theme";
 
 interface FABProps {
   onPress: () => void;
@@ -12,17 +13,11 @@ export function FAB({ onPress }: FABProps) {
     <Pressable
       style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
       onPress={onPress}
-      accessible={true}
+      accessible
       accessibilityRole="button"
       accessibilityLabel="Add"
-      accessibilityState={{ disabled: false }}
     >
-      <ThemedText
-        style={styles.icon}
-        importantForAccessibility="no-hide-descendants"
-      >
-        +
-      </ThemedText>
+      <MaterialIcons name="add" size={28} color={Colors.dark.primaryText} />
     </Pressable>
   );
 }
@@ -52,11 +47,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.96 }],
-  },
-  icon: {
-    fontSize: 28,
-    color: "#fff",
-    lineHeight: 32,
-    fontWeight: "300",
   },
 });
