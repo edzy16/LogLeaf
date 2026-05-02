@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   saveButtonText: {
-    color: "#fff",
+    color: Colors.dark.primaryText,
     fontWeight: "600",
   },
   fuelHeader: {
