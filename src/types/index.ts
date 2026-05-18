@@ -12,6 +12,13 @@ export interface Part {
   interval_km: number | null;
 }
 
+export interface PartReplacementLog {
+  id: number;
+  part_id: number;
+  replaced_at_km: number;
+  logged_at: number;
+}
+
 export interface FuelLog {
   id: number;
   vehicle_id: number;

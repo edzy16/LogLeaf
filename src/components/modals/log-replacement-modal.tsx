@@ -1,9 +1,9 @@
 import { ModalSheet } from "@/components/modal-sheet";
 import { ThemedText } from "@/components/themed-text";
 import { Colors, Spacing } from "@/constants/theme";
-import { logReplacement } from "@/db/parts";
+import { logReplacement, updateReplacementLog } from "@/db/parts";
 import { bumpOdometer } from "@/db/vehicles";
-import { Part } from "@/types";
+import { Part, PartReplacementLog } from "@/types";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useEffect, useState } from "react";
 import {
@@ -24,6 +24,7 @@ interface LogReplacementModalProps {
   part: Part | null;
   vehicleId: number;
   currentKm: number;
+  existingLog?: PartReplacementLog;
 }
 
 export function LogReplacementModal({
@@ -33,15 +34,16 @@ export function LogReplacementModal({
   part,
   vehicleId,
   currentKm,
+  existingLog,
 }: LogReplacementModalProps) {
   const db = useSQLiteContext();
   const [kmStr, setKmStr] = useState("");
 
   // Snapshot currentKm at open time so parent refetches don't wipe user input.
   useEffect(() => {
-    if (visible) setKmStr(String(currentKm));
+    if (visible) setKmStr(String(existingLog?.replaced_at_km ?? currentKm));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible]);
+  }, [visible, existingLog?.id]);
 
   if (!part) return null;
 
@@ -51,7 +53,11 @@ export function LogReplacementModal({
     if (!part) return;
     const replacedAtKm = Math.round(rawKm);
     try {
-      await logReplacement(db, part.id, replacedAtKm);
+      if (existingLog) {
+        await updateReplacementLog(db, existingLog.id, part.id, replacedAtKm);
+      } else {
+        await logReplacement(db, part.id, replacedAtKm);
+      }
       await bumpOdometer(db, vehicleId, replacedAtKm);
       onSaved();
       onClose();
@@ -86,7 +92,7 @@ export function LogReplacementModal({
   return (
     <ModalSheet visible={visible} onClose={onClose}>
       <ThemedText type="subtitle" style={styles.title}>
-        Log Replacement
+        {existingLog ? "Edit Replacement" : "Log Replacement"}
       </ThemedText>
       <ThemedText
         type="small"
@@ -117,7 +123,7 @@ export function LogReplacementModal({
         disabled={!isValid}
       >
         <ThemedText type="default" style={styles.buttonText}>
-          Log Replacement
+          {existingLog ? "Save Changes" : "Log Replacement"}
         </ThemedText>
       </TouchableOpacity>
     </ModalSheet>

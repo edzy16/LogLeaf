@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import { Colors, BottomTabInset, Spacing } from '@/constants/theme';
 import { Part, Vehicle } from '@/types';
@@ -76,7 +77,11 @@ export default function HomeScreen() {
 
         {!hasFlags && data.length > 0 && (
           <View style={styles.allGood}>
-            <ThemedText style={styles.allGoodIcon}>✓</ThemedText>
+            <MaterialIcons
+              name="check-circle"
+              size={20}
+              color={Colors.dark.success}
+            />
             <ThemedText type="default">All parts are up to date</ThemedText>
           </View>
         )}
@@ -142,9 +147,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     paddingVertical: Spacing.four,
-  },
-  allGoodIcon: {
-    color: Colors.dark.success,
-    fontSize: 20,
   },
 });

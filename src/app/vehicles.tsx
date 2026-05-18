@@ -11,6 +11,8 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { MaterialIcons } from '@expo/vector-icons';
+
 import { Colors, BottomTabInset, Spacing } from '@/constants/theme';
 import { Vehicle } from '@/types';
 import { getVehicles, deleteVehicle } from '@/db/vehicles';
@@ -75,7 +77,8 @@ export default function VehiclesScreen() {
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => setAddModalOpen(true)}>
-              <ThemedText style={styles.addButtonText}>+ Add</ThemedText>
+              <MaterialIcons name="add" size={16} color={Colors.dark.primaryText} />
+              <ThemedText style={styles.addButtonText}>Add</ThemedText>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -94,12 +97,19 @@ export default function VehiclesScreen() {
             style={({ pressed }) => [styles.card, pressed && styles.pressed]}
             onPress={() => router.push(`/vehicles/${vehicle.id}`)}
             onLongPress={() => handleLongPress(vehicle)}>
-            <ThemedText type="default" style={styles.vehicleName}>
-              {vehicle.name}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {vehicle.current_km.toLocaleString()} km
-            </ThemedText>
+            <View style={styles.cardContent}>
+              <ThemedText type="default" style={styles.vehicleName}>
+                {vehicle.name}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {vehicle.current_km.toLocaleString()} km
+              </ThemedText>
+            </View>
+            <MaterialIcons
+              name="chevron-right"
+              size={24}
+              color={Colors.dark.textMuted}
+            />
           </Pressable>
         ))}
       </ScrollView>
@@ -144,14 +154,18 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.two,
   },
   addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: Colors.dark.primary,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
-    borderRadius: Spacing.two,
+    borderRadius: 999,
   },
   addButtonText: {
-    color: '#fff',
+    color: Colors.dark.primaryText,
     fontWeight: '600',
+    fontSize: 13,
   },
   emptyState: {
     paddingVertical: Spacing.six,
@@ -162,17 +176,21 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
     backgroundColor: Colors.dark.backgroundElement,
     borderRadius: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.dark.backgroundSelected,
     padding: Spacing.three,
+  },
+  cardContent: {
+    flex: 1,
     gap: Spacing.half,
   },
   pressed: {
     opacity: 0.7,
   },
   vehicleName: {
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

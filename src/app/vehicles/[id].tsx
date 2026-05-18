@@ -1,3 +1,4 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useCallback, useState } from "react";
@@ -11,9 +12,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { StatusPill } from "@/components/status-pill";
 import { AddPartModal } from "@/components/modals/add-part-modal";
 import { LogFuelModal } from "@/components/modals/log-fuel-modal";
-import { LogReplacementModal } from "@/components/modals/log-replacement-modal";
 import { PartStatusRow } from "@/components/part-status-row";
 import { ThemedText } from "@/components/themed-text";
 import { BottomTabInset, Colors, Spacing } from "@/constants/theme";
@@ -43,7 +44,6 @@ export default function VehicleDetailScreen() {
 
   const [addPartOpen, setAddPartOpen] = useState(false);
   const [editPart, setEditPart] = useState<Part | null>(null);
-  const [replacePart, setReplacePart] = useState<Part | null>(null);
   const [logFuelOpen, setLogFuelOpen] = useState(false);
 
   const [notFound, setNotFound] = useState(false);
@@ -189,10 +189,7 @@ export default function VehicleDetailScreen() {
   const mileageBadge = () => {
     if (!mileage) return null;
     if (mileage.status === "precise") {
-      return { label: "✓ Precise", color: Colors.dark.success };
-    }
-    if (mileage.status === "estimated") {
-      return { label: "~ Estimated", color: Colors.dark.warning };
+      return { label: "Precise", icon: "check-circle" as const, color: Colors.dark.success };
     }
     return null;
   };
@@ -210,7 +207,8 @@ export default function VehicleDetailScreen() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <ThemedText themeColor="primary">← Back</ThemedText>
+            <MaterialIcons name="arrow-back" size={16} color={Colors.dark.primary} />
+            <ThemedText themeColor="primary">Back</ThemedText>
           </TouchableOpacity>
           <ThemedText type="subtitle" style={styles.vehicleName}>
             {vehicle.name}
@@ -223,8 +221,11 @@ export default function VehicleDetailScreen() {
             <ThemedText type="default" style={styles.sectionTitle}>
               Parts
             </ThemedText>
-            <TouchableOpacity onPress={() => setAddPartOpen(true)}>
-              <ThemedText themeColor="primary">+ Add</ThemedText>
+            <TouchableOpacity
+              onPress={() => setAddPartOpen(true)}
+              style={styles.iconLink}>
+              <MaterialIcons name="add" size={18} color={Colors.dark.primary} />
+              <ThemedText themeColor="primary">Add</ThemedText>
             </TouchableOpacity>
           </View>
 
@@ -242,7 +243,7 @@ export default function VehicleDetailScreen() {
               <PartStatusRow
                 part={part}
                 currentKm={vehicle.current_km}
-                onPress={(p) => setReplacePart(p)}
+                onPress={(p) => router.push(`/parts/${p.id}` as never)}
               />
             </TouchableOpacity>
           ))}
@@ -276,9 +277,12 @@ export default function VehicleDetailScreen() {
             </View>
           ) : (
             <View style={styles.odometerRow}>
-              <ThemedText type="default">
-                {vehicle.current_km.toLocaleString()} km
-              </ThemedText>
+              <View style={styles.odometerLeft}>
+                <MaterialIcons name="speed" size={20} color={Colors.dark.primary} />
+                <ThemedText type="default" style={styles.odometerValue}>
+                  {vehicle.current_km.toLocaleString()} km
+                </ThemedText>
+              </View>
               <TouchableOpacity onPress={() => setEditingOdometer(true)}>
                 <ThemedText themeColor="primary">Update</ThemedText>
               </TouchableOpacity>
@@ -286,13 +290,14 @@ export default function VehicleDetailScreen() {
           )}
 
           <View style={styles.fuelHeader}>
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText type="default" style={styles.sectionTitle}>
               Fuel log
             </ThemedText>
-            <TouchableOpacity onPress={() => setLogFuelOpen(true)}>
-              <ThemedText themeColor="primary" style={styles.smallLink}>
-                + Add fill-up
-              </ThemedText>
+            <TouchableOpacity
+              onPress={() => setLogFuelOpen(true)}
+              style={styles.iconLink}>
+              <MaterialIcons name="add-circle-outline" size={18} color={Colors.dark.primary} />
+              <ThemedText themeColor="primary">Add fill-up</ThemedText>
             </TouchableOpacity>
           </View>
 
@@ -307,14 +312,16 @@ export default function VehicleDetailScreen() {
               onLongPress={() => handleFuelLogLongPress(log)}
               style={styles.fuelRow}
             >
-              <ThemedText type="small">
-                {log.odometer_km.toLocaleString()} km
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
+              <View style={styles.fuelRowLeft}>
+                <ThemedText type="default" style={styles.fuelKm}>
+                  {log.odometer_km.toLocaleString()} km
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {new Date(log.logged_at).toLocaleDateString()}
+                </ThemedText>
+              </View>
+              <ThemedText style={styles.fuelLitres}>
                 {log.fuel_litres} L{log.is_full_tank ? "" : " (partial)"}
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {new Date(log.logged_at).toLocaleDateString()}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -327,9 +334,11 @@ export default function VehicleDetailScreen() {
               Mileage
             </ThemedText>
             {mileageBadge() && (
-              <ThemedText type="small" style={{ color: mileageBadge()!.color }}>
-                {mileageBadge()!.label}
-              </ThemedText>
+              <StatusPill
+                label={mileageBadge()!.label}
+                icon={mileageBadge()!.icon}
+                color={mileageBadge()!.color}
+              />
             )}
           </View>
 
@@ -388,18 +397,6 @@ export default function VehicleDetailScreen() {
         />
       )}
 
-      <LogReplacementModal
-        visible={replacePart !== null}
-        onClose={() => setReplacePart(null)}
-        onSaved={() => {
-          loadData();
-          setReplacePart(null);
-        }}
-        part={replacePart}
-        vehicleId={vehicle.id}
-        currentKm={vehicle.current_km}
-      />
-
       <LogFuelModal
         visible={logFuelOpen}
         onClose={() => setLogFuelOpen(false)}
@@ -421,6 +418,9 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
   },
   backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     paddingTop: Spacing.four,
     paddingBottom: Spacing.two,
   },
@@ -431,6 +431,11 @@ const styles = StyleSheet.create({
   },
   vehicleName: {
     marginBottom: Spacing.two,
+  },
+  iconLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   section: {
     gap: Spacing.two,
@@ -451,8 +456,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.backgroundElement,
     borderRadius: Spacing.two,
     padding: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.dark.backgroundSelected,
+  },
+  odometerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+  },
+  odometerValue: {
+    fontWeight: "700",
   },
   odometerEdit: {
     flexDirection: "row",
@@ -474,24 +485,31 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
   },
   saveButtonText: {
-    color: "#fff",
+    color: Colors.dark.primaryText,
     fontWeight: "600",
   },
   fuelHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: Spacing.two,
-  },
-  smallLink: {
-    fontSize: 13,
   },
   fuelRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: Spacing.two,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.backgroundSelected,
+    alignItems: "center",
+    backgroundColor: Colors.dark.backgroundElement,
+    borderRadius: Spacing.two,
+    padding: Spacing.three,
+  },
+  fuelRowLeft: {
+    gap: Spacing.half,
+  },
+  fuelKm: {
+    fontWeight: "700",
+  },
+  fuelLitres: {
+    color: Colors.dark.primary,
+    fontWeight: "700",
   },
   mileageHeader: {
     flexDirection: "row",
