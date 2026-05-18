@@ -4,9 +4,16 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "start:dev": "node ./scripts/with-app-variant.js development expo start",
+    "prebuild": "expo prebuild",
+    "prebuild:clean": "expo prebuild --clean",
+    "prebuild:dev": "node ./scripts/with-app-variant.js development expo prebuild",
+    "prebuild:dev:clean": "node ./scripts/with-app-variant.js development expo prebuild --clean",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
+    "android:dev": "node ./scripts/with-app-variant.js development expo run:android",
     "ios": "expo run:ios",
+    "ios:dev": "node ./scripts/with-app-variant.js development expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest"

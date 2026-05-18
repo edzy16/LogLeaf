@@ -120,4 +120,28 @@ export async function migrateDb(db: SQLiteDatabase): Promise<void> {
       await db.runAsync('INSERT INTO migrations (version) VALUES (?)', 3);
     });
   }
+
+  if (!appliedVersions.has(4)) {
+    await db.withTransactionAsync(async () => {
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS part_replacement_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          part_id INTEGER NOT NULL REFERENCES parts(id) ON DELETE CASCADE,
+          replaced_at_km INTEGER NOT NULL,
+          logged_at INTEGER NOT NULL
+        );
+
+        INSERT INTO part_replacement_logs (part_id, replaced_at_km, logged_at)
+          SELECT id, replaced_at_km, 0
+          FROM parts
+          WHERE NOT EXISTS (
+            SELECT 1 FROM part_replacement_logs WHERE part_replacement_logs.part_id = parts.id
+          );
+
+        CREATE INDEX IF NOT EXISTS idx_part_replacement_logs_part
+          ON part_replacement_logs(part_id, replaced_at_km DESC, id DESC);
+      `);
+      await db.runAsync('INSERT INTO migrations (version) VALUES (?)', 4);
+    });
+  }
 }

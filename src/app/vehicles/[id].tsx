@@ -15,7 +15,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusPill } from "@/components/status-pill";
 import { AddPartModal } from "@/components/modals/add-part-modal";
 import { LogFuelModal } from "@/components/modals/log-fuel-modal";
-import { LogReplacementModal } from "@/components/modals/log-replacement-modal";
 import { PartStatusRow } from "@/components/part-status-row";
 import { ThemedText } from "@/components/themed-text";
 import { BottomTabInset, Colors, Spacing } from "@/constants/theme";
@@ -45,7 +44,6 @@ export default function VehicleDetailScreen() {
 
   const [addPartOpen, setAddPartOpen] = useState(false);
   const [editPart, setEditPart] = useState<Part | null>(null);
-  const [replacePart, setReplacePart] = useState<Part | null>(null);
   const [logFuelOpen, setLogFuelOpen] = useState(false);
 
   const [notFound, setNotFound] = useState(false);
@@ -245,7 +243,7 @@ export default function VehicleDetailScreen() {
               <PartStatusRow
                 part={part}
                 currentKm={vehicle.current_km}
-                onPress={(p) => setReplacePart(p)}
+                onPress={(p) => router.push(`/parts/${p.id}` as never)}
               />
             </TouchableOpacity>
           ))}
@@ -398,18 +396,6 @@ export default function VehicleDetailScreen() {
           existing={editPart}
         />
       )}
-
-      <LogReplacementModal
-        visible={replacePart !== null}
-        onClose={() => setReplacePart(null)}
-        onSaved={() => {
-          loadData();
-          setReplacePart(null);
-        }}
-        part={replacePart}
-        vehicleId={vehicle.id}
-        currentKm={vehicle.current_km}
-      />
 
       <LogFuelModal
         visible={logFuelOpen}

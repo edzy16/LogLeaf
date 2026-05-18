@@ -24,7 +24,12 @@
       "Bash(gh run *)",
       "PowerShell(gh run list --workflow=android-release.yml --limit 3 2>&1)",
       "Bash(xxd)",
-      "Read(//d//**)"
+      "Read(//d//**)",
+      "Bash(xargs grep *)",
+      "Bash(echo \"tsc exit code: $?\")",
+      "Bash(powershell -Command ' *)",
+      "Bash(grep -rn \"#[0-9a-fA-F]\\\\{3,6\\\\}\" d:/Dev/pit-stop/src/app/ d:/Dev/pit-stop/src/components/fab.tsx d:/Dev/pit-stop/src/components/vehicle-card.tsx d:/Dev/pit-stop/src/components/part-status-row.tsx d:/Dev/pit-stop/src/components/add-sheet.tsx d:/Dev/pit-stop/src/components/app-tabs.tsx d:/Dev/pit-stop/src/components/status-pill.tsx)",
+      "Bash(grep -rn \"#[0-9a-fA-F]\\\\{3,6\\\\}\" \"d:/Dev/pit-stop/src/components/themed-text.tsx\" \"d:/Dev/pit-stop/src/components/themed-view.tsx\" \"d:/Dev/pit-stop/src/components/modal-sheet.tsx\")"
     ]
   }
 }

@@ -51,6 +51,14 @@ export default function AppTabs() {
           headerShown: false,
         }}
       />
+
+      <Tabs.Screen
+        name="parts/[id]"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }
