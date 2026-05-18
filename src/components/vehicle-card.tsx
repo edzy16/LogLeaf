@@ -27,7 +27,12 @@ export function VehicleCard({
             styles.badge,
             flaggedParts.length > 0 ? styles.badgeAlert : styles.badgeOk,
           ]}>
-          <ThemedText type="small" style={styles.badgeText}>
+          <ThemedText
+            type="small"
+            style={[
+              styles.badgeText,
+              { color: flaggedParts.length > 0 ? Colors.dark.danger : Colors.dark.success },
+            ]}>
             {flaggedParts.length > 0
               ? `${flaggedParts.length} part${flaggedParts.length > 1 ? 's' : ''} due`
               : 'All good'}
@@ -57,8 +62,6 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.dark.backgroundElement,
     borderRadius: Spacing.three,
-    borderWidth: 1,
-    borderColor: Colors.dark.backgroundSelected,
     padding: Spacing.three,
     gap: Spacing.two,
   },
@@ -72,9 +75,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   badge: {
-    paddingHorizontal: Spacing.two,
+    paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.half,
-    borderRadius: Spacing.three,
+    borderRadius: 999,
   },
   badgeAlert: {
     backgroundColor: Colors.dark.danger + '33',
@@ -84,6 +87,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
+    fontWeight: '500',
   },
   parts: {
     gap: Spacing.two,

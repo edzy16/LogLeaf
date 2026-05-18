@@ -54,8 +54,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.backgroundElement,
     borderRadius: Spacing.three,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.dark.backgroundSelected,
   },
   pressed: {
     opacity: 0.7,

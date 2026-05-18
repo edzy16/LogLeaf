@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Image } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
 import MotorbikeFill from "@/assets/icons/bike";
 import { Colors } from "@/constants/theme";
@@ -18,6 +18,12 @@ export default function AppTabs() {
           backgroundColor: colors.backgroundElement,
           borderTopColor: colors.backgroundSelected,
         },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+          letterSpacing: 1.5,
+          textTransform: 'uppercase',
+        },
       }}
     >
       <Tabs.Screen
@@ -25,10 +31,7 @@ export default function AppTabs() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <Image
-              source={require("@/assets/images/tabIcons/home.png")}
-              style={{ width: 20, height: 20, tintColor: color }}
-            />
+            <MaterialIcons name="home" size={22} color={color} />
           ),
         }}
       />
@@ -43,6 +46,14 @@ export default function AppTabs() {
 
       <Tabs.Screen
         name="vehicles/[id]"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      <Tabs.Screen
+        name="parts/[id]"
         options={{
           href: null,
           headerShown: false,
